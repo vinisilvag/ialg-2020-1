@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <ctype.h>
 #include <locale.h>
 #include <windows.h>
 
@@ -20,6 +21,10 @@ void createRobot(robot* robot);
 
 void selectRobots(robot robots[], int tam);
 
+void selectUniqueRobot(robot robot);
+
+void writeInFile(robot robots[], int usedSpace);
+
 int binarySearch(robot robots[], int start_pos, int end_pos, int value);
 
 void shellSort(robot robots[], int size);
@@ -28,28 +33,30 @@ int main() {
 	
 	setlocale(LC_ALL,"");
 	
-	const int tam = 3;
-	int option, usedSpace;
-	
-	fstream file("data.txt", ios::app | ios::in | ios::out | fstream::out);
-		
-	if(!file) {
-		return 0;
-	}
+	const int tam = 4;
+	int option, usedSpace = 0;
 	
 	robot* robots = new robot[tam];
 	
-	file >> usedSpace;
+	ifstream read_file("data.txt");
+	
+	if(!read_file) {
+		return 0;
+	}
+	
+	read_file >> usedSpace;
 	
 	if(usedSpace != 0) {
 		for(int i=0; i<usedSpace; i++) {
-			file >> robots[i].id;
-			file >> robots[i].type;
-			file >> robots[i].creation_year;
-			file >> robots[i].description;
-			file >> robots[i].main_use;
+			read_file >> robots[i].id;
+			read_file >> robots[i].type;
+			read_file >> robots[i].creation_year;
+			read_file >> robots[i].description;
+			read_file >> robots[i].main_use;
 		}
 	}
+	
+	read_file.close();
 	
 	do {
 		
@@ -68,17 +75,62 @@ int main() {
 			
 				createRobot(&newRobot);
 				
-				robots[usedSpace] = newRobot;
-				usedSpace++;
+				if(binarySearch(robots, 0, usedSpace, newRobot.id) == -1) {
+					robots[usedSpace] = newRobot;
+					usedSpace++;
+					
+					shellSort(robots, usedSpace);
+					
+					cout << endl << "Robô cadastrado com sucesso!" << endl;
+				} else {
+					cout << endl << "Já existe um robô com esse ID. Tente cadastrar com um número diferente!" << endl;
+				}
+				
+				cout << endl;
 			}
-			
-			system("pause");
 			
 		} else if(option == 2) {
 			
-			cout << "excluir";
+			int robotID;
 			
-			system("pause");
+			cout << endl << "Informe o ID do robô que você deseja deletar: ";
+			cin >> robotID;
+			
+			int index = binarySearch(robots, 0, usedSpace, robotID);
+			
+			if(index != -1) {
+				cout << endl << "> Você tem certeza que deseja deletar esse robô?" << endl << endl;
+				
+				selectUniqueRobot(robots[index]);
+				
+				char deleteRobot;
+				
+				do {
+					cout << "R (S/N): ";
+					cin >> deleteRobot;
+					
+					deleteRobot = toupper(deleteRobot);
+					
+					if(deleteRobot != 'S' and deleteRobot != 'N') {
+						cout << endl << "Informe o caractere correto!" << endl;
+					}
+				} while(deleteRobot != 'S' and deleteRobot != 'N');
+				
+				if(deleteRobot == 'S') {
+					for(int i=index; i<usedSpace; i++) {
+						robots[i] = robots[i+1];
+					}
+					
+					usedSpace--;
+					
+					cout << endl << "Robô deletado com sucesso!" << endl << endl;
+				} else {
+					cout << endl << "Operação de remoção de um robô cancelada!" << endl << endl;
+				}
+				
+			} else {
+				cout << endl << "Não foi possível encontrar um robô com esse ID!" << endl << endl;
+			}
 			
 		} else if(option == 3) {
 			
@@ -86,21 +138,44 @@ int main() {
 			
 			selectRobots(robots, usedSpace);
 			
-			system("pause");
-			
 		} else if(option == 4) {
 			
 			cout << "alterar";
 			
-			system("pause");
-			
 		} else if(option == 5) {
 			
-			cout << "gravar";
+			writeInFile(robots, usedSpace);
 			
-			system("pause");
+			cout << endl << "Gravação realizada com sucesso!" << endl << endl;
+			
+		} else if(option == 6) {
+			
+			char save;
+			
+			cout << endl << "Deseja sair sem salvar as alteraçõess realizadas?" << endl;
+			
+			do {
+				cout << "R (S/N): ";
+				cin >> save;
+				
+				save = toupper(save);
+				
+				if(save != 'S' and save != 'N') {
+					cout << endl << "Informe o caractere correto!" << endl;
+				}
+			} while(save != 'S' and save != 'N');
+			
+			if(save == 'S') {
+				writeInFile(robots, usedSpace);
+			
+				cout << endl << "Gravação realizada com sucesso!" << endl << endl;
+			}
+			
+			cout << "Saindo do aplicativo..." << endl << endl;
 			
 		}
+		
+		system("pause");
 			
 	} while(option != 6);
 	
@@ -131,6 +206,8 @@ int menu() {
 		}
 		
 	} while(answer < 1 or answer > 6);
+	
+	return answer;
 }
 
 void createRobot(robot* robot) {
@@ -159,6 +236,26 @@ void selectRobots(robot robots[], int tam) {
 		cout << "Descrição: " << robots[i].description << endl;
 		cout << "Uso principal: " << robots[i].main_use << endl << endl;
 	}
+}
+
+void selectUniqueRobot(robot robot) {
+	cout << "ID: " << robot.id << endl;
+	cout << "Tipo: " << robot.type << endl;
+	cout << "Ano de criação: " << robot.creation_year << endl;
+	cout << "Descrição: " << robot.description << endl;
+	cout << "Uso principal: " << robot.main_use << endl << endl;
+}
+
+void writeInFile(robot robots[], int usedSpace) {
+	ofstream write_file("data.txt");
+			
+	write_file << usedSpace << endl;
+			
+	for(int i=0; i<usedSpace; i++) {
+		write_file << robots[i].id << " " << robots[i].type << " " << robots[i].creation_year << " " << robots[i].description << " " << robots[i].main_use << endl;
+	}
+	
+	write_file.close();
 }
 
 int binarySearch(robot robots[], int start_pos, int end_pos, int value) {
