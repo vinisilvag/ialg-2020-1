@@ -23,7 +23,13 @@ void selectRobots(robot robots[], int tam);
 
 void selectUniqueRobot(robot robot);
 
-void writeInFile(robot robots[], int usedSpace);
+void removeRobot(robot robots[], int* used_space, int index);
+
+void updateRobot(robot* robot);
+
+void readFromFile(robot robots[], int* used_space);
+
+void writeInFile(robot robots[], int used_space);
 
 int binarySearch(robot robots[], int start_pos, int end_pos, int value);
 
@@ -34,29 +40,11 @@ int main() {
 	setlocale(LC_ALL,"");
 	
 	const int tam = 4;
-	int option, usedSpace = 0;
+	int option, used_space = 0;
 	
 	robot* robots = new robot[tam];
 	
-	ifstream read_file("data.txt");
-	
-	if(!read_file) {
-		return 0;
-	}
-	
-	read_file >> usedSpace;
-	
-	if(usedSpace != 0) {
-		for(int i=0; i<usedSpace; i++) {
-			read_file >> robots[i].id;
-			read_file >> robots[i].type;
-			read_file >> robots[i].creation_year;
-			read_file >> robots[i].description;
-			read_file >> robots[i].main_use;
-		}
-	}
-	
-	read_file.close();
+	readFromFile(robots, &used_space);
 	
 	do {
 		
@@ -65,38 +53,35 @@ int main() {
 		option = menu();
 		
 		if(option == 1) {
-			
-			if(usedSpace + 1 > tam) {
-				cout << endl << "Não é possível inserir novo registro! Capacidade máxima de alocação atingida." << endl << endl;
+			if(used_space + 1 > tam) {
+				cout << endl << "Não é possível inserir um novo registro! Capacidade máxima de alocação atingida." << endl << endl;
 			} else {
 				cout << endl << ">> NOVO ROBÔ <<" << endl;
 				
 				robot newRobot;
-			
 				createRobot(&newRobot);
 				
-				if(binarySearch(robots, 0, usedSpace, newRobot.id) == -1) {
-					robots[usedSpace] = newRobot;
-					usedSpace++;
+				if(binarySearch(robots, 0, used_space, newRobot.id) == -1) {
+					robots[used_space] = newRobot;
+					used_space++;
 					
-					shellSort(robots, usedSpace);
+					shellSort(robots, used_space);
 					
-					cout << endl << "Robô cadastrado com sucesso!" << endl;
+					cout << endl << "Registro incluído com sucesso!" << endl;
 				} else {
-					cout << endl << "Já existe um robô com esse ID. Tente cadastrar com um número diferente!" << endl;
+					cout << endl << "Já existe um registro com esse ID. Tente cadastrar com um número diferente!" << endl;
 				}
 				
 				cout << endl;
 			}
 			
 		} else if(option == 2) {
-			
 			int robotID;
 			
 			cout << endl << "Informe o ID do robô que você deseja deletar: ";
 			cin >> robotID;
 			
-			int index = binarySearch(robots, 0, usedSpace, robotID);
+			int index = binarySearch(robots, 0, used_space, robotID);
 			
 			if(index != -1) {
 				cout << endl << "> Você tem certeza que deseja deletar esse robô?" << endl << endl;
@@ -117,42 +102,46 @@ int main() {
 				} while(deleteRobot != 'S' and deleteRobot != 'N');
 				
 				if(deleteRobot == 'S') {
-					for(int i=index; i<usedSpace; i++) {
-						robots[i] = robots[i+1];
-					}
+					removeRobot(robots, &used_space, index);
 					
-					usedSpace--;
-					
-					cout << endl << "Robô deletado com sucesso!" << endl << endl;
+					cout << endl << "Registro excluído com sucesso!" << endl << endl;
 				} else {
-					cout << endl << "Operação de remoção de um robô cancelada!" << endl << endl;
+					cout << endl << "Operação de remoção de um registro cancelada!" << endl << endl;
 				}
 				
 			} else {
-				cout << endl << "Não foi possível encontrar um robô com esse ID!" << endl << endl;
+				cout << endl << "Não foi possível encontrar um registro com esse ID!" << endl << endl;
 			}
-			
 		} else if(option == 3) {
 			
 			cout << endl << ">> ROBÔS CADASTRADOS <<" << endl << endl;
-			
-			selectRobots(robots, usedSpace);
+			selectRobots(robots, used_space);
 			
 		} else if(option == 4) {
+			int alteredID;
 			
-			cout << "alterar";
+			cout << endl << "Informe o ID do robô que você deseja alterar: ";
+			cin >> alteredID;
 			
+			int index = binarySearch(robots, 0, used_space, alteredID);
+			
+			if(index != -1) {
+				cout << endl << "> Informe os novos dados do robô" << endl << endl;
+				
+				updateRobot(&robots[index]);
+				
+				cout << endl << "Registro alterado com sucesso!" << endl << endl;
+			} else {
+				cout << endl << "O ID inserido não está associado a nenhum robô!" << endl << endl;
+			}
 		} else if(option == 5) {
-			
-			writeInFile(robots, usedSpace);
+			writeInFile(robots, used_space);
 			
 			cout << endl << "Gravação realizada com sucesso!" << endl << endl;
-			
 		} else if(option == 6) {
-			
-			char save;
-			
 			cout << endl << "Deseja sair sem salvar as alteraçõess realizadas?" << endl;
+			
+			char save;		
 			
 			do {
 				cout << "R (S/N): ";
@@ -166,17 +155,17 @@ int main() {
 			} while(save != 'S' and save != 'N');
 			
 			if(save == 'S') {
-				writeInFile(robots, usedSpace);
-			
-				cout << endl << "Gravação realizada com sucesso!" << endl << endl;
+				writeInFile(robots, used_space);
+				cout << endl << "Gravação realizada com sucesso!" << endl;
 			}
 			
-			cout << "Saindo do aplicativo..." << endl << endl;
-			
+			cout << endl << "Saindo do programa...";
 		}
 		
-		system("pause");
-			
+		if(option != 6) {
+			system("pause");
+		}
+		
 	} while(option != 6);
 	
 	delete[] robots;
@@ -227,8 +216,10 @@ void createRobot(robot* robot) {
 	cin >> robot->main_use;
 }
 
-void selectRobots(robot robots[], int tam) {
-	for(int i=0; i<tam; i++) {
+void selectRobots(robot robots[], int used_space) {
+	cout << "Número de robôs cadastrados: " << used_space << endl << endl;
+	
+	for(int i=0; i<used_space; i++) {
 		cout << "> ROBÔ " << i+1 << endl;
 		cout << "ID: " << robots[i].id << endl;
 		cout << "Tipo: " << robots[i].type << endl;
@@ -246,12 +237,52 @@ void selectUniqueRobot(robot robot) {
 	cout << "Uso principal: " << robot.main_use << endl << endl;
 }
 
-void writeInFile(robot robots[], int usedSpace) {
+void removeRobot(robot robots[], int* used_space, int index) {
+	for(int i=index; i<*used_space; i++) {
+		robots[i] = robots[i+1];
+	}
+					
+	*used_space -= 1;
+}
+
+void updateRobot(robot* robot) {
+	cout << "Tipo (" << robot->type << "): ";
+	cin >> robot->type;
+	
+	cout << "Ano de criação (" << robot->creation_year << "): ";
+	cin >> robot->creation_year;
+	
+	cout << "Descrição (" << robot->description << "): ";
+	cin >> robot->description;
+	
+	cout << "Uso principal (" << robot->main_use << "): ";
+	cin >> robot->main_use;
+}
+
+void readFromFile(robot robots[], int* used_space) {
+	ifstream read_file("data.txt");
+	
+	read_file >> *used_space;
+	
+	if(used_space != 0) {
+		for(int i=0; i<*used_space; i++) {
+			read_file >> robots[i].id;
+			read_file >> robots[i].type;
+			read_file >> robots[i].creation_year;
+			read_file >> robots[i].description;
+			read_file >> robots[i].main_use;
+		}
+	}
+	
+	read_file.close();
+}
+
+void writeInFile(robot robots[], int used_space) {
 	ofstream write_file("data.txt");
 			
-	write_file << usedSpace << endl;
+	write_file << used_space << endl;
 			
-	for(int i=0; i<usedSpace; i++) {
+	for(int i=0; i<used_space; i++) {
 		write_file << robots[i].id << " " << robots[i].type << " " << robots[i].creation_year << " " << robots[i].description << " " << robots[i].main_use << endl;
 	}
 	
