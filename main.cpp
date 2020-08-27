@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstring>
+#include <string>
 #include <fstream>
 #include <locale.h>
 #include <ctype.h>
@@ -34,7 +34,7 @@ void removeRobot(robot robots[], int* used_space, int index);
 
 void updateRobot(robot robots[], int index, int changed_attribute);
 
-void readFromFile(robot robots[], int* used_space);
+char continueFunctionTest();
 
 void writeInFile(robot robots[], int used_space);
 
@@ -44,34 +44,39 @@ void shellSort(robot robots[], int size);
 
 int main() {
 	
+	// Permite o uso de caracteres UTF-8 (acentos, etc)
 	setlocale(LC_ALL,"");
 	
-	const int TAM = 100;
+	const int TAM = 4;
 	int option, used_space = 0;
 	
+	// Aloca dinamicamente o vetor de registros
 	robot* robots = new robot[TAM];
-	
-	readFromFile(robots, &used_space);
 	
 	do {
 		
-		system("cls");
+		system("cls"); // Substituir por system("clear") caso o código esteja sendo executado no Linux
 		
+		// Variável que recebe a opção escolhida pelo usuário que é retornada na função menu()
 		option = menu();
 		
 		switch(option) {
 			case 1: {
+				// Verifica se mais um cadastro excederia o limite estipulado 
 				if(used_space + 1 > TAM) {
-					cout << endl << "Não é possível inserir um novo registro! Capacidade máxima de alocação atingida." << endl << endl;
+					cout << endl << "Não é possível inserir um novo registro! Capacidade máxima atingida." << endl << endl;
 				} else {
 					cout << endl << ">> NOVO REGISTRO <<" << endl;
 					
+					// Cadastra um novo registro no vetor de registros
 					createRobot(robots, &used_space);
 						
+					// Ordena esse novo vetor
 					shellSort(robots, used_space);
 						
 					cout << endl << "Registro incluído com sucesso!" << endl << endl;
 				}
+				
 				break;
 			}
 			
@@ -86,22 +91,14 @@ int main() {
 				if(index != -1) {
 					cout << endl << "> Você tem certeza que deseja deletar esse robô?" << endl << endl;
 					
+					// Mostra na tela o registro que está pendente para ser deletado
 					selectUniqueRobot(robots[index]);
 					
-					char deleteRobot;
-					
-					do {
-						cout << "R (S/N): ";
-						cin >> deleteRobot;
-						
-						deleteRobot = toupper(deleteRobot);
-						
-						if(deleteRobot != 'S' and deleteRobot != 'N') {
-							cout << endl << "Informe o caractere correto!" << endl;
-						}
-					} while(deleteRobot != 'S' and deleteRobot != 'N');
+					// Verifica se o usuário quer mesmo deletar aquele registro
+					char deleteRobot = continueFunctionTest();
 					
 					if(deleteRobot == 'S') {
+						// Deleta o registro caso a resposta seja sim
 						removeRobot(robots, &used_space, index);
 						
 						cout << endl << "Registro excluído com sucesso!" << endl << endl;
@@ -110,7 +107,7 @@ int main() {
 					}
 					
 				} else {
-					cout << endl << "Não foi possível encontrar um registro com esse ID!" << endl << endl;
+					cout << endl << "Registro não encontrado!" << endl << endl;
 				}
 				
 				break;
@@ -118,6 +115,8 @@ int main() {
 			
 			case 3: {
 				cout << endl << ">> REGISTROS CADASTRADOS <<" << endl << endl;
+				
+				// Exibe todos os registros no vetor
 				selectRobots(robots, used_space);
 				
 				break;
@@ -129,11 +128,15 @@ int main() {
 				cout << endl << "Informe o ID do robô que você deseja alterar: ";
 				cin >> alteredID;
 				
+				// Busca a ID informada pelo usuário
 				int index = binarySearch(robots, 0, used_space, alteredID);
 				
+				/* Caso ela exista -> index != -1 e a condição cai no bloco if
+				Caso não -> index == -1 e a condição cai no bloco else */
 				if(index != -1) {
 					int changed_attribute;
 					
+					// É verificado qual atributo daquela ID o usuário deseja alterar
 					cout << endl << "> Qual informação você deseja alterar?" << endl << endl;
 					cout << "1) Tipo" << endl;
 					cout << "2) Ano de criação" << endl;
@@ -149,6 +152,7 @@ int main() {
 						}
 					} while(changed_attribute < 1 or changed_attribute > 4);
 					
+					// A propriedade é devidamente alterada pela função
 					updateRobot(robots, index, changed_attribute);
 				} else {
 					cout << endl << "Registro não encontrado!" << endl << endl;
@@ -158,6 +162,7 @@ int main() {
 			}
 			
 			case 5: {
+				// Salva as informações atuais do vetor no arquivo
 				writeInFile(robots, used_space);
 				cout << endl << "Gravação realizada com sucesso!" << endl << endl;
 				
@@ -167,20 +172,11 @@ int main() {
 			case 6: {
 				cout << endl << "Deseja salvar as modificações realizadas?" << endl;
 			
-				char save;		
-				
-				do {
-					cout << "R (S/N): ";
-					cin >> save;
-					
-					save = toupper(save);
-					
-					if(save != 'S' and save != 'N') {
-						cout << endl << "Informe o caractere correto!" << endl;
-					}
-				} while(save != 'S' and save != 'N');
+				// Verifica se o usuário deseja salvar as alterações antes de sair
+				char save = continueFunctionTest();
 				
 				if(save == 'S') {
+					// Caso sim, o programa salva antes de finalizar sua execução
 					writeInFile(robots, used_space);
 					cout << endl << "Gravação realizada com sucesso!" << endl;
 				}
@@ -191,8 +187,8 @@ int main() {
 			}
 		}
 		
-		// Código que pausa o programa ao final da execução de cada opção, desde que não seja requisitada a saída do programa
-		// Serve apenas para melhorar a experiência do usuário com o programa
+		/* Código que pausa o programa ao final da execução de cada opção, desde que não seja requisitada a saída do programa
+		Serve apenas para melhorar a experiência do usuário com o programa */
 		if(option != 6) {
 			system("pause");
 		}
@@ -206,7 +202,7 @@ int main() {
 	
 }
 
-//Menu para interação com o usuário
+// Menu para interação com o usuário
 int menu() {
 	int answer;
 	
@@ -224,7 +220,7 @@ int menu() {
 		cin >> answer;
 		
 		if(answer < 1 or answer > 6) {
-			cout << "Opção não existente na lista!" << endl << endl;
+			cout << endl << "Opção não existente na lista!" << endl << endl;
 		}
 		
 	} while(answer < 1 or answer > 6);
@@ -232,11 +228,12 @@ int menu() {
 	return answer;
 }
 
-// Cria o novo registro dentro do vetor de registros, testando se a ID inserinda já existe no vetor ou não
+// Cria o novo registro dentro do vetor de registros
 void createRobot(robot robots[], int* used_space) {
 	robot newRobot;
 	int index;
 	
+	// Testa se o ID inserindo já existe no vetor ou não
 	do{
 		cout << "ID: ";
 		cin >> newRobot.id;
@@ -301,57 +298,70 @@ void removeRobot(robot robots[], int* used_space, int index) {
 /* Função que atualiza a informação com o novo valor. A variavel changed_attribute 
 informa qual a opção escolhida pelo usuário e deverá ser atualizada */
 void updateRobot(robot robots[], int index, int changed_attribute) {
-	if(changed_attribute == 1) {
+	switch(changed_attribute) {
+		case 1: {
+			cout << endl << "Tipo (atual: " << robots[index].type << "): ";
+			cin.ignore();
+			getline(cin, robots[index].type);
+			
+			break;
+		}
 		
-		cout << endl << "Tipo (atual: " << robots[index].type << "): ";
-		cin.ignore();
-		getline(cin, robots[index].type);
+		case 2: {
+			cout << endl << "Ano de Criação (atual: " << robots[index].creation_year << "): ";
+			cin.ignore();
+			cin >> robots[index].creation_year;
+			
+			break;
+		}
 		
-	} else if(changed_attribute == 2) {
+		case 3: {
+			cout << endl << "Descrição (atual: " << robots[index].description << "): ";
+			cin.ignore();
+			getline(cin, robots[index].description);
 		
-		cout << endl << "Ano de Criação (atual: " << robots[index].creation_year << "): ";
-		cin.ignore();
-		cin >> robots[index].creation_year;
+			break;
+		}
 		
-	} else if(changed_attribute == 3) {
-		
-		cout << endl << "Descrição (atual: " << robots[index].description << "): ";
-		cin.ignore();
-		getline(cin, robots[index].description);
-		
-	} else {
-		
-		cout << endl << "Uso principal (atual: " << robots[index].main_use << "): ";
-		cin.ignore();
-		getline(cin, robots[index].main_use);
-		
+		case 4: {
+			cout << endl << "Uso principal (atual: " << robots[index].main_use << "): ";
+			cin.ignore();
+			getline(cin, robots[index].main_use);
+			
+			break;
+		}
 	}
 	
 	cout << endl << "Valor alterado com sucesso!" << endl << endl;
 }
 
-// Lê as informações do arquivo para o vetor de registros
-void readFromFile(robot robots[], int* used_space) {
-	ifstream read_file("data.txt");
+/* Função que testa se o usuário digitou sim ou não na saída
+Usada para a verificação na saída do programa e ao deletar algum usuário */
+char continueFunctionTest() {
+	char input;
 	
-	read_file >> *used_space;
-	
-	if(used_space != 0) {
-		for(int i=0; i<*used_space; i++) {
-			read_file >> robots[i].id;
-			read_file >> robots[i].type;
-			read_file >> robots[i].creation_year;
-			read_file >> robots[i].description;
-			read_file >> robots[i].main_use;
+	do {
+		cout << "R (S/N): ";
+		cin >> input;
+		
+		input = toupper(input);
+					
+		if(input != 'S' and input != 'N') {
+			cout << endl << "Informe o caractere correto!" << endl << endl;
 		}
-	}
+	} while(input != 'S' and input != 'N');
 	
-	read_file.close();
+	return input;
 }
 
-// Escreve as informações do vetor no arquivo
+// Escreve as informações do vetor de registros no arquivo
 void writeInFile(robot robots[], int used_space) {
-	ofstream write_file("data.txt");
+	string fileName;
+	
+	cout << endl << "Informe o nome do arquivo para salvar os dados (nome + extensão): ";
+	cin >> fileName;
+	
+	ofstream write_file(fileName.c_str());
 			
 	write_file << used_space << endl;
 			
@@ -383,9 +393,9 @@ int binarySearch(robot robots[], int start_pos, int end_pos, int value) {
 	}
 }
 
-// Método de ordenação Shell sort
+// Método de ordenação do vetor: Shell sort
 void shellSort(robot robots[], int size) {
-	int gaps[9] = {1, 4, 10, 23, 57, 132, 301, 701, 1750};
+	int gaps[9] = {1, 4, 10, 23, 57, 132, 301, 701, 1750}; // Sequência de Ciura
 	int gap_pos = 8;
 	
 	while(gaps[gap_pos] > size) {
