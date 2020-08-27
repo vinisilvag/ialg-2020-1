@@ -47,7 +47,7 @@ int main() {
 	// Permite o uso de caracteres UTF-8 (acentos, etc)
 	setlocale(LC_ALL,"");
 	
-	const int TAM = 4;
+	const int TAM = 100;
 	int option, used_space = 0;
 	
 	// Aloca dinamicamente o vetor de registros
@@ -71,7 +71,7 @@ int main() {
 					// Cadastra um novo registro no vetor de registros
 					createRobot(robots, &used_space);
 						
-					// Ordena esse novo vetor
+					// Ordena esse novo vetor pelo ID
 					shellSort(robots, used_space);
 						
 					cout << endl << "Registro incluído com sucesso!" << endl << endl;
@@ -86,6 +86,7 @@ int main() {
 				cout << endl << "Informe o ID do registro que você deseja deletar: ";
 				cin >> robotID;
 				
+				// Procura o ID a ser deletado
 				int index = binarySearch(robots, 0, used_space, robotID);
 				
 				if(index != -1) {
@@ -143,6 +144,7 @@ int main() {
 					cout << "3) Descrição" << endl;
 					cout << "4) Uso principal" << endl;
 					
+					// Verifica se o usuário informou um campo válido
 					do{
 						cout << endl << "R: ";
 						cin >> changed_attribute;
@@ -214,6 +216,7 @@ int menu() {
 	cout << "5) Gravar dados" << endl;
 	cout << "6) Sair" << endl << endl;
 	
+	// Verifica se o usuário inseriu uma opção válida
 	do {
 		
 		cout << "R: ";
@@ -225,6 +228,7 @@ int menu() {
 		
 	} while(answer < 1 or answer > 6);
 	
+	// Retorna o valor escolhido pelo usuário para ser usado na main
 	return answer;
 }
 
@@ -244,7 +248,9 @@ void createRobot(robot robots[], int* used_space) {
 			cout << endl << "ID já cadastrado! Digite outro." << endl << endl;
 		}
 	} while(index != -1);
-			
+	
+	// Termina de ler os valores do novo registro
+	
 	cout << "Tipo: ";
 	cin.ignore();
 	getline(cin, newRobot.type);
@@ -277,7 +283,7 @@ void selectRobots(robot robots[], int used_space) {
 	}
 }
 
-// Mostra na tela um registro específico pedido pela main
+// Mostra na tela um registro específico passado por parâmetro
 void selectUniqueRobot(robot robot) {
 	cout << "ID: " << robot.id << endl;
 	cout << "Tipo: " << robot.type << endl;
@@ -288,10 +294,12 @@ void selectUniqueRobot(robot robot) {
 
 // Função que deleta o registro com a ID escolhida
 void removeRobot(robot robots[], int* used_space, int index) {
+	// Passa os registros da direita para a esquerda para remover o registro
 	for(int i=index; i<*used_space - 1; i++) {
 		robots[i] = robots[i+1];
 	}
-					
+	
+	// Subtrai 1 da variável por causa do registro excluído
 	*used_space -= 1;
 }
 
