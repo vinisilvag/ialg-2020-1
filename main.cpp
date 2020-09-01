@@ -1,11 +1,10 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <locale.h>
 #include <ctype.h>
-#include <windows.h>
 
 /*
+	Graduando: Vinícius Gomes;
 	Tema do trabalho: Robôs;
 	Método de busca: Binária;
 	Método de ordenação: Shell sort;
@@ -14,6 +13,7 @@
 
 using namespace std;
 
+// Declaração do struct
 struct robot {
 	int id;
 	string type;
@@ -22,6 +22,7 @@ struct robot {
 	string main_use;
 };
 
+// Declaração das funções
 int menu();
 
 void createRobot(robot robots[], int* used_space);
@@ -30,9 +31,9 @@ void selectRobots(robot robots[], int tam);
 
 void selectUniqueRobot(robot robot);
 
-void removeRobot(robot robots[], int* used_space, int index);
-
 void updateRobot(robot robots[], int index, int changed_attribute);
+
+void removeRobot(robot robots[], int* used_space, int index);
 
 char continueFunctionTest();
 
@@ -44,9 +45,6 @@ void shellSort(robot robots[], int size);
 
 int main() {
 	
-	// Permite o uso de caracteres UTF-8 (acentos, etc)
-	setlocale(LC_ALL,"");
-	
 	const int TAM = 100;
 	int option, used_space = 0;
 	
@@ -55,8 +53,6 @@ int main() {
 	
 	do {
 		
-		system("cls"); // Substituir por system("clear") caso o código esteja sendo executado no Linux
-		
 		// Variável que recebe a opção escolhida pelo usuário que é retornada na função menu()
 		option = menu();
 		
@@ -64,7 +60,7 @@ int main() {
 			case 1: {
 				// Verifica se mais um cadastro excederia o limite estipulado 
 				if(used_space + 1 > TAM) {
-					cout << endl << "Não é possível inserir um novo registro! Capacidade máxima atingida." << endl << endl;
+					cout << endl << "Nao eh possível inserir um novo registro! Capacidade maxima atingida." << endl << endl;
 				} else {
 					cout << endl << ">> NOVO REGISTRO <<" << endl;
 					
@@ -74,7 +70,7 @@ int main() {
 					// Ordena esse novo vetor pelo ID
 					shellSort(robots, used_space);
 						
-					cout << endl << "Registro incluído com sucesso!" << endl << endl;
+					cout << endl << "Registro incluido com sucesso!" << endl << endl;
 				}
 				
 				break;
@@ -83,14 +79,14 @@ int main() {
 			case 2: {
 				int robotID;
 			
-				cout << endl << "Informe o ID do registro que você deseja deletar: ";
+				cout << endl << "Informe o ID do registro que voce deseja deletar: ";
 				cin >> robotID;
 				
 				// Procura o ID a ser deletado
 				int index = binarySearch(robots, 0, used_space, robotID);
 				
 				if(index != -1) {
-					cout << endl << "> Você tem certeza que deseja deletar esse robô?" << endl << endl;
+					cout << endl << "> Voce tem certeza que deseja deletar esse robo?" << endl << endl;
 					
 					// Mostra na tela o registro que está pendente para ser deletado
 					selectUniqueRobot(robots[index]);
@@ -102,13 +98,12 @@ int main() {
 						// Deleta o registro caso a resposta seja sim
 						removeRobot(robots, &used_space, index);
 						
-						cout << endl << "Registro excluído com sucesso!" << endl << endl;
+						cout << endl << "Registro excluido com sucesso!" << endl << endl;
 					} else {
-						cout << endl << "Operação cancelada!" << endl << endl;
+						cout << endl << "Operacao cancelada!" << endl << endl;
 					}
-					
 				} else {
-					cout << endl << "Registro não encontrado!" << endl << endl;
+					cout << endl << "Registro nao encontrado!" << endl << endl;
 				}
 				
 				break;
@@ -126,7 +121,7 @@ int main() {
 			case 4: {
 				int alteredID, changed_attribute;
 			
-				cout << endl << "Informe o ID do robô que você deseja alterar: ";
+				cout << endl << "Informe o ID do robo que voce deseja alterar: ";
 				cin >> alteredID;
 				
 				// Busca a ID informada pelo usuário
@@ -138,26 +133,26 @@ int main() {
 					int changed_attribute;
 					
 					// É verificado qual atributo daquela ID o usuário deseja alterar
-					cout << endl << "> Qual informação você deseja alterar?" << endl << endl;
+					cout << endl << "> Qual informacao voce deseja alterar?" << endl << endl;
 					cout << "1) Tipo" << endl;
-					cout << "2) Ano de criação" << endl;
-					cout << "3) Descrição" << endl;
+					cout << "2) Ano de criacao" << endl;
+					cout << "3) Descricao" << endl;
 					cout << "4) Uso principal" << endl;
 					
 					// Verifica se o usuário informou um campo válido
-					do{
+					do {
 						cout << endl << "R: ";
 						cin >> changed_attribute;
 						
 						if(changed_attribute < 1 or changed_attribute > 4) {
-							cout << endl << "Informe um número válido!" << endl;
+							cout << endl << "Informe um número valido!" << endl;
 						}
 					} while(changed_attribute < 1 or changed_attribute > 4);
 					
 					// A propriedade é devidamente alterada pela função
 					updateRobot(robots, index, changed_attribute);
 				} else {
-					cout << endl << "Registro não encontrado!" << endl << endl;
+					cout << endl << "Registro nao encontrado!" << endl << endl;
 				}
 				
 				break;
@@ -166,13 +161,13 @@ int main() {
 			case 5: {
 				// Salva as informações atuais do vetor no arquivo
 				writeInFile(robots, used_space);
-				cout << endl << "Gravação realizada com sucesso!" << endl << endl;
+				cout << endl << "Gravacao realizada com sucesso!" << endl << endl;
 				
 				break;
 			}
 			
 			case 6: {
-				cout << endl << "Deseja salvar as modificações realizadas?" << endl;
+				cout << endl << "Deseja salvar as modificacoes realizadas?" << endl;
 			
 				// Verifica se o usuário deseja salvar as alterações antes de sair
 				char save = continueFunctionTest();
@@ -180,7 +175,7 @@ int main() {
 				if(save == 'S') {
 					// Caso sim, o programa salva antes de finalizar sua execução
 					writeInFile(robots, used_space);
-					cout << endl << "Gravação realizada com sucesso!" << endl;
+					cout << endl << "Gravacao realizada com sucesso!" << endl;
 				}
 				
 				cout << endl << "Saindo do programa...";
@@ -189,10 +184,19 @@ int main() {
 			}
 		}
 		
-		/* Código que pausa o programa ao final da execução de cada opção, desde que não seja requisitada a saída do programa
+		/* Código que pausa o console ao final da execução de cada opção, desde que não seja requisitada a saída do programa
 		Serve apenas para melhorar a experiência do usuário com o programa */
 		if(option != 6) {
-			system("pause");
+			if(option != 1 && option != 4) {
+				cin.ignore();
+			}
+			cout << "Aperte qualquer tecla para continuar... ";
+			cin.get();
+		}
+		
+		// Limpa a tela com alguns endlines
+		for(int i=0; i<8; i++) {
+			cout << endl;
 		}
 		
 	} while(option != 6);
@@ -223,7 +227,7 @@ int menu() {
 		cin >> answer;
 		
 		if(answer < 1 or answer > 6) {
-			cout << endl << "Opção não existente na lista!" << endl << endl;
+			cout << endl << "Opcao nao existente na lista!" << endl << endl;
 		}
 		
 	} while(answer < 1 or answer > 6);
@@ -238,14 +242,14 @@ void createRobot(robot robots[], int* used_space) {
 	int index;
 	
 	// Testa se o ID inserindo já existe no vetor ou não
-	do{
+	do {
 		cout << "ID: ";
 		cin >> newRobot.id;
 		
 		index = binarySearch(robots, 0, *used_space, newRobot.id);
 		
 		if(index != -1) {
-			cout << endl << "ID já cadastrado! Digite outro." << endl << endl;
+			cout << endl << "ID ja cadastrado! Digite outro." << endl << endl;
 		}
 	} while(index != -1);
 	
@@ -255,10 +259,10 @@ void createRobot(robot robots[], int* used_space) {
 	cin.ignore();
 	getline(cin, newRobot.type);
 			
-	cout << "Ano de criação: ";
+	cout << "Ano de criacao: ";
 	cin >> newRobot.creation_year;
 			
-	cout << "Descrição: ";
+	cout << "Descricao: ";
 	cin.ignore();
 	getline(cin, newRobot.description);
 			
@@ -271,14 +275,14 @@ void createRobot(robot robots[], int* used_space) {
 
 // Mostra na tela todos os registros no vetor
 void selectRobots(robot robots[], int used_space) {
-	cout << "Número de robôs cadastrados: " << used_space << endl << endl;
+	cout << "Numero de robos cadastrados: " << used_space << endl << endl;
 	
 	for(int i=0; i<used_space; i++) {
-		cout << "> ROBÔ " << i+1 << endl;
+		cout << "> ROBO " << i+1 << endl;
 		cout << "ID: " << robots[i].id << endl;
 		cout << "Tipo: " << robots[i].type << endl;
-		cout << "Ano de criação: " << robots[i].creation_year << endl;
-		cout << "Descrição: " << robots[i].description << endl;
+		cout << "Ano de criacao: " << robots[i].creation_year << endl;
+		cout << "Descricao: " << robots[i].description << endl;
 		cout << "Uso principal: " << robots[i].main_use << endl << endl;
 	}
 }
@@ -287,15 +291,15 @@ void selectRobots(robot robots[], int used_space) {
 void selectUniqueRobot(robot robot) {
 	cout << "ID: " << robot.id << endl;
 	cout << "Tipo: " << robot.type << endl;
-	cout << "Ano de criação: " << robot.creation_year << endl;
-	cout << "Descrição: " << robot.description << endl;
+	cout << "Ano de criacao: " << robot.creation_year << endl;
+	cout << "Descricao: " << robot.description << endl;
 	cout << "Uso principal: " << robot.main_use << endl << endl;
 }
 
 // Função que deleta o registro com a ID escolhida
 void removeRobot(robot robots[], int* used_space, int index) {
 	// Passa os registros da direita para a esquerda para remover o registro
-	for(int i=index; i<*used_space - 1; i++) {
+	for(int i=index; i<*used_space; i++) {
 		robots[i] = robots[i+1];
 	}
 	
@@ -316,7 +320,7 @@ void updateRobot(robot robots[], int index, int changed_attribute) {
 		}
 		
 		case 2: {
-			cout << endl << "Ano de Criação (atual: " << robots[index].creation_year << "): ";
+			cout << endl << "Ano de Criacao (atual: " << robots[index].creation_year << "): ";
 			cin.ignore();
 			cin >> robots[index].creation_year;
 			
@@ -324,7 +328,7 @@ void updateRobot(robot robots[], int index, int changed_attribute) {
 		}
 		
 		case 3: {
-			cout << endl << "Descrição (atual: " << robots[index].description << "): ";
+			cout << endl << "Descricao (atual: " << robots[index].description << "): ";
 			cin.ignore();
 			getline(cin, robots[index].description);
 		
@@ -366,7 +370,7 @@ char continueFunctionTest() {
 void writeInFile(robot robots[], int used_space) {
 	string fileName;
 	
-	cout << endl << "Informe o nome do arquivo para salvar os dados (nome + extensão): ";
+	cout << endl << "Informe o nome do arquivo para salvar os dados (nome + extensao): ";
 	cin >> fileName;
 	
 	ofstream write_file(fileName.c_str());
